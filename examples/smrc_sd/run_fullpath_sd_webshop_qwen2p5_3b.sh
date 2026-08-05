@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# FullPath-SD on WebShop with Qwen2.5-3B-Instruct (paper main-table: update 150).
+[[ "${VERBOSE_LAUNCH:-0}" == "1" ]] && set -x
+set -o pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TOTAL_TRAINING_STEPS=${TOTAL_TRAINING_STEPS:-150}
+TOTAL_EPOCHS=${TOTAL_EPOCHS:-${TOTAL_TRAINING_STEPS}}
+SAVE_FREQ=${SAVE_FREQ:-25}
+
+export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1,2,3}
+export N_GPUS_PER_NODE=${N_GPUS_PER_NODE:-4}
+export MODEL_PATH=${MODEL_PATH:-Qwen/Qwen2.5-3B-Instruct}
+export PROJECT_NAME=${PROJECT_NAME:-smrc_sd_webshop_qwen2p5_3b}
+export PATH_OPD_DEFAULT_SUITE_DIR=${PATH_OPD_DEFAULT_SUITE_DIR:-logs/smrc_sd_webshop_qwen2p5_3b}
+export ROLLOUT_GPU_MEMORY_UTILIZATION=${ROLLOUT_GPU_MEMORY_UTILIZATION:-0.58}
+export PPO_MAX_TOKEN_LEN_PER_GPU=${PPO_MAX_TOKEN_LEN_PER_GPU:-24000}
+export MAX_NUM_BATCHED_TOKENS=${MAX_NUM_BATCHED_TOKENS:-32768}
+export MAX_RESPONSE_LENGTH=${MAX_RESPONSE_LENGTH:-512}
+export WEBSHOP_REQUIRE_THINK_TAGS=${WEBSHOP_REQUIRE_THINK_TAGS:-True}
+
+source "${SCRIPT_DIR}/defaults_webshop.sh"
+
+export TOTAL_TRAINING_STEPS
+export TOTAL_EPOCHS
+export SAVE_FREQ
+export PATH_SDL_LOSS_NORMALIZATION=response_token_mean
+export EXPERIMENT_NAME=${EXPERIMENT_NAME:-fullpath_sd_webshop_qwen2p5_3b}
+export PATH_TEACHER_CONTEXT=gt_path
+export PATH_ALIGNMENT_MODE=full_start
+export PATH_ENABLE_WALKTHROUGH_TRACE_RECOVERY=False
+export PATH_RECOVERY_MATCH_MODE=history
+export PATH_STATE_SDL_SELECTION=all
+
+mkdir -p "$LOG_DIR"
+bash "$SMRC_WEBSHOP_RUNNER" "$@" 2>&1 | tee "${LOG_DIR}/${EXPERIMENT_NAME}_$(date +%Y%m%d_%H%M%S).log"
