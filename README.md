@@ -1,6 +1,16 @@
-# SMRC-SD
-
-![arXiv](https://img.shields.io/badge/arXiv-2608.05219-b31b1b.svg)   ![Hugging Face Paper](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Paper-ffd21e)
+<h1 align="center">
+SMRC-SD: State-Matched Routing and Contextualized Self-Distillation for Multi-Turn Agents
+</h1>
+<div align="center">
+  <p>
+    <a href="https://arxiv.org/abs/2608.05219">
+      <img src="https://img.shields.io/badge/Paper-arXiv%3A2608.05219-blue" alt="Paper"/>
+    </a>
+    <a href="https://huggingface.co/papers/2608.05219">
+      <img src="https://img.shields.io/badge/Daily%20Paper-huggingface-yellow" alt="HF Paper"/>
+    </a>
+  </p>
+</div>
 
 Code for *When Privileged Guidance Misaligns: State-Matched Routing and Contextualized Self-Distillation for Multi-Turn Agents*, including **SMRC-SD** and the **FullPath-SD** baseline.
 
