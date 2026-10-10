@@ -128,21 +128,9 @@ log
 outputs
 
 # appworld
-data/
-data_/
 .tmp
 *ports
 
 auth.json
-examples/sdar_trainer/vmpr_seed_prefixes/test/*
-
-# local paper drafts / conference kits
-AAAI-AuthorKit27/
-# Root-level figure previews; canonical paper assets live under paper_drafts/.
-/state_compatible_teacher_context_*.png
 
 .codex/
-path_opd_state_a800_0630/*
-data_/
-
-path_opd_state_a800_0630_h800_4gpu_vllm017
