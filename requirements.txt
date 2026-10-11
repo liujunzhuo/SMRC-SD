@@ -1,0 +1,24 @@
+# Development dependencies; install the GPU stack first as described in README.md.
+accelerate
+codetiming
+datasets
+dill
+flash-attn==2.7.4.post1
+hydra-core
+liger-kernel
+numpy
+pandas
+peft
+pyarrow>=19.0.0
+pybind11
+pylatexenc
+pre-commit
+ray[default]>=2.41.0,<=2.50.0
+tensordict>=0.8.0,<=0.10.0,!=0.9.0
+torchdata
+transformers>=4.56.0,<=4.57.3
+wandb
+packaging>=20.0
+uvicorn
+fastapi
+qwen-vl-utils[decord]
