@@ -1,32 +1,25 @@
 #!/usr/bin/env bash
-
-# WebShop runner wrapper. Prefer an existing WebShop conda env; fall back to
-# the current Python if CONDA_BIN / CONDA_ENV are unset or unavailable.
+# Keep GPU training in the current environment; simulate WebShop over HTTP.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-GENERIC_RUNNER="${SCRIPT_DIR}/run_trainer_alfworld.sh"
-CONDA_BIN=${CONDA_BIN:-}
-CONDA_ENV=${CONDA_ENV:-verl-agent-webshop}
-
-if [[ -n "${CONDA_BIN}" && -x "${CONDA_BIN}" && "${CONDA_DEFAULT_ENV:-}" != "$CONDA_ENV" ]]; then
-    unset RAY_ADDRESS
-    unset RAY_JOB_CONFIG_JSON_ENV_VAR
-    exec "$CONDA_BIN" run --no-capture-output -n "$CONDA_ENV" bash "$0" "$@"
+export WEBSHOP_SERVICE_FILE=${WEBSHOP_SERVICE_FILE:-${REPO_ROOT}/logs/webshop_cpu_services.json}
+if [[ ! -f "$WEBSHOP_SERVICE_FILE" ]]; then
+    echo "WebShop service registry not found: $WEBSHOP_SERVICE_FILE" >&2
+    echo "Start examples/smrc_sd/start_webshop_cpu_service.sh before training." >&2
+    exit 1
 fi
-
-if [[ -n "${CONDA_PREFIX:-}" ]]; then
-    export JAVA_HOME=${JAVA_HOME:-$CONDA_PREFIX}
-    export PATH="$JAVA_HOME/bin:$PATH"
-fi
-export _JAVA_OPTIONS="${_JAVA_OPTIONS:--XX:+UseSerialGC -Xss512k -Xmx1g}"
+# Ray workers may use a different working directory.
+WEBSHOP_SERVICE_FILE="$(cd "$(dirname "$WEBSHOP_SERVICE_FILE")" && pwd)/$(basename "$WEBSHOP_SERVICE_FILE")"
+export WEBSHOP_SERVICE_FILE
 export OPENBLAS_NUM_THREADS=${OPENBLAS_NUM_THREADS:-1}
 export MKL_NUM_THREADS=${MKL_NUM_THREADS:-1}
 export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1}
 export DATASETS_MAX_WORKERS=${DATASETS_MAX_WORKERS:-1}
 export TOKENIZERS_PARALLELISM=${TOKENIZERS_PARALLELISM:-false}
-unset RAY_ADDRESS
-unset RAY_JOB_CONFIG_JSON_ENV_VAR
+unset RAY_ADDRESS RAY_JOB_CONFIG_JSON_ENV_VAR
 
-exec bash "$GENERIC_RUNNER" "$@"
+exec bash "${SCRIPT_DIR}/run_trainer_alfworld.sh" \
+    "++ray_init.runtime_env.env_vars.WEBSHOP_SERVICE_FILE=$WEBSHOP_SERVICE_FILE" \
+    "$@"

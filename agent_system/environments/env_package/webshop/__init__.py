@@ -14,4 +14,10 @@
 # limitations under the License.
 
 from .projection import webshop_projection
-from .envs import build_webshop_envs
+
+
+def build_webshop_envs(*args, **kwargs):
+    """Load the Ray environment only in the training process."""
+    from .envs import build_webshop_envs as build
+
+    return build(*args, **kwargs)

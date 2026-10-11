@@ -3097,6 +3097,8 @@ def build_path_privileged_teacher_batch(
     max_prompt_length: int,
     global_step: int = 0,
 ) -> DataProto:
+    if hasattr(context_provider, "build_teacher_batch"):
+        return context_provider.build_teacher_batch(batch, tokenizer, global_step)
     bs = batch.batch["input_ids"].size(0)
     response_length = batch.batch["responses"].size(1)
     teacher_input_ids_list = []

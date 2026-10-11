@@ -38,7 +38,7 @@ install_requires = [
     "ray[default]>=2.41.0,<=2.50.0",
     "torchdata",
     "tensordict>=0.8.0,<=0.10.0,!=0.9.0",
-    "transformers<=4.57.3",
+    "transformers>=4.56.0,<=4.57.3",
     "wandb",
     "packaging>=20.0",
     "qwen-vl-utils[decord]",
@@ -47,9 +47,9 @@ install_requires = [
 TEST_REQUIRES = ["pytest", "pre-commit", "py-spy"]
 PRIME_REQUIRES = ["pyext"]
 GEO_REQUIRES = ["mathruler"]
-GPU_REQUIRES = ["liger-kernel", "flash-attn"]
+GPU_REQUIRES = ["liger-kernel", "flash-attn==2.7.4.post1"]
 MATH_REQUIRES = ["math-verify"]  # Add math-verify as an optional dependency
-VLLM_REQUIRES = ["tensordict>=0.8.0,<=0.10.0,!=0.9.0", "vllm>=0.8.5,<=0.11.0"]
+VLLM_REQUIRES = ["vllm==0.17.0"]
 SGLANG_REQUIRES = [
     "tensordict>=0.8.0,<=0.10.0,!=0.9.0",
     "sglang[srt,openai]==0.5.5",

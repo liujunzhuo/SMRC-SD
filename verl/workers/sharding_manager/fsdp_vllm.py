@@ -61,7 +61,8 @@ class FSDPVLLMShardingManager(BaseShardingManager):
         device_mesh: DeviceMesh = None,
         offload_param: bool = False,
         load_format: str = 'dummy_hf',
-        layered_summon: bool = True
+        layered_summon: bool = True,
+        generation_seed: int = None,
     ):
         self.module = module
         # For AsyncLLM, inference_engine and model_runner are defer intialized in vLLMAsyncRollout.load_model
@@ -100,7 +101,9 @@ class FSDPVLLMShardingManager(BaseShardingManager):
         # get a random rng states
         if self.device_mesh is not None:
             gen_dp_rank = self.device_mesh["dp"].get_local_rank()
-            get_torch_device().manual_seed(gen_dp_rank + 1000)  # make sure all tp ranks have the same random states
+            # Separate DP streams; all TP ranks in a replica share a stream.
+            seed = 1000 if generation_seed is None else int(generation_seed)
+            get_torch_device().manual_seed(gen_dp_rank + seed)
             self.gen_random_states = get_torch_device().get_rng_state()
             get_torch_device().set_rng_state(self.torch_random_states)
         else:

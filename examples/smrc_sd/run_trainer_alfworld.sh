@@ -178,6 +178,13 @@ else
     fi
 fi
 
+runtime_args=()
+[[ -n "${DATA_SEED:-}" ]] && runtime_args+=("+data.seed=$DATA_SEED")
+[[ -n "${ROLLOUT_SEED:-}" ]] && runtime_args+=("actor_rollout_ref.rollout.seed=$ROLLOUT_SEED")
+[[ -n "${GENERATION_SEED:-}" ]] && runtime_args+=("actor_rollout_ref.rollout.generation_seed=$GENERATION_SEED")
+[[ -n "${RESUME_MODE:-}" ]] && runtime_args+=("trainer.resume_mode=$RESUME_MODE")
+[[ -n "${CHECKPOINT_DIR:-}" ]] && runtime_args+=("trainer.default_local_dir=$CHECKPOINT_DIR")
+
 python3 -m examples.data_preprocess.prepare \
     --mode 'text' \
     --train_data_size $train_data_size \
@@ -282,4 +289,5 @@ python3 -m "$trainer_main_module" \
     trainer.rollout_dump_freq=$rollout_dump_freq \
     +trainer.rollout_only=$rollout_only \
     trainer.validation_data_dir=$validation_data_dir \
-    $@
+    "${runtime_args[@]}" \
+    "$@"

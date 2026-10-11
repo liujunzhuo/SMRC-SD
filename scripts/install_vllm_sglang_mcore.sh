@@ -1,4 +1,5 @@
 #!/bin/bash
+# Legacy upstream veRL multi-backend setup. For SMRC-SD, use README.md section 1.
 
 USE_MEGATRON=${USE_MEGATRON:-1}
 USE_SGLANG=${USE_SGLANG:-1}

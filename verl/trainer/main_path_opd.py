@@ -113,7 +113,7 @@ class PathOPDTaskRunner:
                 config.actor_rollout_ref.actor.sdl_loss_sample_filter = path_cfg.get("sdl_sample_filter", "all")
                 config.actor_rollout_ref.actor.sdl_loss_token_scope = path_cfg.get("sdl_token_scope", "all")
                 config.actor_rollout_ref.actor.sdl_loss_mask_special_tokens = path_cfg.get("sdl_mask_special_tokens", False)
-                config.actor_rollout_ref.actor.sdl_loss_sample_weighting = path_opd_uses_sdl_sample_weights(path_cfg)
+                config.actor_rollout_ref.actor.sdl_loss_sample_weighting = path_opd_uses_sdl_sample_weights(path_cfg) or config.env.env_name == "ftrl"
                 config.actor_rollout_ref.actor.sdl_loss_normalization = path_cfg.get("sdl_loss_normalization", "selected_token_mean")
                 sdl_topk_loss_clamp = float(path_cfg.get("sdl_topk_loss_clamp", 0.0) or 0.0)
                 if use_topk_sdl and sdl_topk_loss_clamp < 0:
@@ -176,7 +176,8 @@ class PathOPDTaskRunner:
 
         from agent_system.environments import make_envs
 
-        envs, val_envs = make_envs(config)
+        is_ftrl = config.env.env_name == "ftrl"
+        envs, val_envs = (None, None) if is_ftrl else make_envs(config)
 
         from verl.utils import hf_processor, hf_tokenizer
 
@@ -241,7 +242,11 @@ class PathOPDTaskRunner:
             mapping[Role.RefPolicy] = global_pool_id
 
         reward_manager_name = config.reward_model.get("reward_manager", "episode")
-        if reward_manager_name == "episode":
+        if is_ftrl:
+            from verl.trainer.ppo.ftrl_smrc import FTRLRewardManager
+
+            reward_manager_cls = FTRLRewardManager
+        elif reward_manager_name == "episode":
             from agent_system.reward_manager import EpisodeRewardManager
 
             reward_manager_cls = EpisodeRewardManager
@@ -262,6 +267,9 @@ class PathOPDTaskRunner:
 
         from agent_system.multi_turn_rollout import TrajectoryCollector
 
+        if is_ftrl:
+            from agent_system.multi_turn_rollout.ftrl import FTRLCollector as TrajectoryCollector
+
         traj_collector = TrajectoryCollector(config=config, tokenizer=tokenizer, processor=processor)
 
         from verl.trainer.main_ppo import create_rl_dataset, create_rl_sampler
@@ -279,7 +287,13 @@ class PathOPDTaskRunner:
         skills_dir = sdar_cfg.get("skills_dir", default_skills_dir)
         skill_all = sdar_cfg.get("skill_all", False)
         skill_provider = SkillProvider(skills_dir=skills_dir, skill_all=skill_all)
-        path_context_provider = PathPrivilegedContextProvider(config=config, skill_provider=skill_provider)
+        if is_ftrl:
+            from verl.trainer.ppo.ftrl_smrc import FTRLContextProvider, FTRLSMRCTrainer
+
+            path_context_provider = FTRLContextProvider(config)
+            PathPrivOPDRayTrainer = FTRLSMRCTrainer
+        else:
+            path_context_provider = PathPrivilegedContextProvider(config=config, skill_provider=skill_provider)
 
         print(f"[Path-OPD] loss_type: {loss_type}")
         print(f"[Path-OPD] teacher_context: {path_cfg.get('teacher_context', 'gt_path')}")
