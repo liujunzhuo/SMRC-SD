@@ -1,16 +1,10 @@
 # SMRC-SD: State-Matched Routing and Contextualized Self-Distillation for Multi-Turn Agents
 
-Anonymous code supplement for double-blind review. Author names, affiliations, acknowledgements, and links to non-anonymous preprints are omitted.
-
 Code for *When Privileged Guidance Misaligns: State-Matched Routing and Contextualized Self-Distillation for Multi-Turn Agents*.
 
 **Use successful references where they apply.** SMRC-SD matches the student's reached state to a reference continuation, then uses the reference to guide self-distillation on compatible turns. The resulting policy runs without references, a teacher, or a matcher at inference.
 
 [Method](#overview) · [Results](#results) · [Setup](#1-environment-setup) · [Training](#2-running-experiments) · [Evaluation](#3-evaluation-protocol)
-
-## Updates
-
-**10/10/2026** — Updated the code with Qwen3-4B experiments, [FTRL](https://aclanthology.org/2026.findings-acl.109/) tool-use training, and a separate CPU service for WebShop simulation.
 
 ## Overview
 
@@ -26,12 +20,17 @@ A successful reference can become locally incompatible when an agent explores a 
 
 Both methods below use the same on-policy GRPO + chosen-token self-distillation framework:
 
+
 | Method          | Turns receiving SDL               | Teacher context                                             |
 | --------------- | --------------------------------- | ----------------------------------------------------------- |
 | **FullPath-SD** | All turns with a usable reference | Full reference path                                         |
 | **SMRC-SD**     | State-matched turns               | Full path + reached-state summary + compatible continuation |
 
+
+
+
 ### Supported environments
+
 
 | Environment  | Interaction                 | State representation                                      | Models                               |
 | ------------ | --------------------------- | --------------------------------------------------------- | ------------------------------------ |
@@ -39,20 +38,22 @@ Both methods below use the same on-policy GRPO + chosen-token self-distillation 
 | **WebShop**  | Product search and purchase | Page type, current product, selected options              | Qwen3-1.7B / 4B, Qwen2.5-3B-Instruct |
 | **FTRL**     | Tool use                    | Observed tool calls and canonicalized returns             | Qwen3-4B                             |
 
+
+
+
 ## Results
 
 **Table 2. ALFWorld and WebShop performance.** The full comparison across Qwen2.5-3B-Instruct, Qwen3-1.7B, and Qwen3-4B.
 
 ![Table 2: ALFWorld and WebShop results across three model sizes, including all reported baselines.](assets/table2.png)
 
-<details>
-<summary><strong>FTRL and out-of-domain tool-use results (Table 3)</strong></summary>
+**FTRL and out-of-domain tool-use results (Table 3)**
 
 ![Table 3: FTRL, BFCL, and ToolHop performance with Qwen3-4B.](assets/table3.png)
 
-</details>
-
 ## 1. Environment setup
+
+
 
 ### 1.1 Training environment and ALFWorld
 
@@ -89,6 +90,8 @@ Download base models (or set `MODEL_PATH` to a local folder):
 # Qwen/Qwen3-1.7B
 # Qwen/Qwen3-4B
 ```
+
+
 
 ### 1.2 WebShop
 
@@ -163,6 +166,8 @@ python scripts/prepare_ftrl_normalized_states.py \
   --root "$FTRL_ROOT" --output "$FTRL_ROOT/normalized"
 ```
 
+
+
 ### 1.4 Included references
 
 Already shipped under `examples/smrc_sd/data/`:
@@ -182,6 +187,8 @@ Run commands from the repository root in the GPU training environment. Each laun
 CUDA_VISIBLE_DEVICES=0,1,2,3 N_GPUS_PER_NODE=4 MODEL_PATH=/path/to/Qwen3-4B \
   bash examples/smrc_sd/run_smrc_sd_alfworld_qwen3_4b.sh
 ```
+
+
 
 ### 2.1 ALFWorld
 
@@ -209,8 +216,7 @@ bash examples/smrc_sd/run_skill_sd_alfworld_qwen3_1p7b.sh
 bash examples/smrc_sd/run_sdar_alfworld_qwen3_1p7b.sh
 ```
 
-<details>
-<summary>Fixed-anchor teacher intervention probe</summary>
+Fixed-anchor teacher intervention probe
 
 After a GRPO run has written rollouts at updates 5/100/150/200/250 and the final actor checkpoint:
 
@@ -221,8 +227,6 @@ bash examples/smrc_sd/probe/run_anchor_probe.sh
 ```
 
 This builds and scores the 1,200-anchor suite. See the [probe guide](examples/smrc_sd/probe/README.md) for details.
-
-</details>
 
 ### 2.2 WebShop
 
@@ -243,6 +247,8 @@ bash examples/smrc_sd/run_fullpath_sd_webshop_qwen2p5_3b.sh
 bash examples/smrc_sd/run_smrc_sd_webshop_qwen3_4b.sh
 bash examples/smrc_sd/run_fullpath_sd_webshop_qwen3_4b.sh
 ```
+
+
 
 ### 2.3 FTRL
 
@@ -270,11 +276,13 @@ Use `MODEL_PATH` for local model weights, `N_GPUS_PER_NODE` and `CUDA_VISIBLE_DE
 
 ## 3. Evaluation protocol
 
-| Environment | Evaluation | Metrics |
-| --- | --- | --- |
-| ALFWorld | 128 fixed held-out tasks × 4 attempts | Avg@4; Pass@4 as an additional metric |
-| WebShop | Fixed 128-task manifest × 4 attempts | Avg@4 and raw environment Score |
-| FTRL | All 200 test tasks, one greedy attempt | Solve-P / Solve-R / Solve-F1 |
+
+| Environment | Evaluation                             | Metrics                               |
+| ----------- | -------------------------------------- | ------------------------------------- |
+| ALFWorld    | 128 fixed held-out tasks × 4 attempts  | Avg@4; Pass@4 as an additional metric |
+| WebShop     | Fixed 128-task manifest × 4 attempts   | Avg@4 and raw environment Score       |
+| FTRL        | All 200 test tasks, one greedy attempt | Solve-P / Solve-R / Solve-F1          |
+
 
 **Avg@4** averages the four attempts; **Pass@4** counts whether at least one succeeds. WebShop uses the small 1,000-product catalog with synthetic goals: goals 500–6909 are used for training, and validation is drawn from the first 500 goals. FTRL Solve-F1 measures acquisition of required tool information.
 
@@ -316,7 +324,10 @@ Evaluate the final merged FTRL model on **BFCL** and **ToolHop** without further
 - **ToolHop:** [TurnSight evaluation instructions](https://github.com/quchangle1/TurnSight#-evaluation), [launcher](https://github.com/quchangle1/TurnSight/blob/main/Scripts/eval_toolhop.sh), and [Python evaluator](https://github.com/quchangle1/TurnSight/blob/main/Code/evaluation/evaluation_toolhop.py). Our results use the **Free** setting with tools provided, one greedy attempt per task, up to nine generations and 1,024 tokens per generation. Adapt the model path and arguments to the evaluator version you use.
 - **BFCL:** follow the [official setup and evaluation guide](https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard). Use the Qwen function-calling handler and evaluate Multi-Turn (Base / Miss Function / Miss Parameter / Long Context), Search, and Memory. Search needs a configured search provider; Memory requires its initialization sessions. Our transfer evaluations use native thinking enabled.
 
+
+
 ## Repository guide
+
 
 | Path                                               | Purpose                                                            |
 | -------------------------------------------------- | ------------------------------------------------------------------ |
@@ -326,6 +337,9 @@ Evaluate the final merged FTRL model on **BFCL** and **ToolHop** without further
 | [agent_system/](agent_system/)                     | Environment adapters, state tracking, and multi-turn rollouts      |
 | [verl/](verl/)                                     | Trainers, workers, and self-distillation losses                    |
 | [scripts/](scripts/)                               | FTRL data preparation, WebShop CPU service, and checkpoint merging |
+
+
+
 
 ## Upstream code
 
