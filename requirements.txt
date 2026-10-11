@@ -18,7 +18,7 @@ tensordict>=0.8.0,<=0.10.0,!=0.9.0
 torchdata
 transformers>=4.56.0,<=4.57.3
 wandb
-packaging>=20.0
+packaging>=26.3
 uvicorn
 fastapi
 qwen-vl-utils[decord]
